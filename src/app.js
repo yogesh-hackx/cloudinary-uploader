@@ -11,13 +11,22 @@ const api = require('./api');
 
 const app = express();
 
-app.use(morgan('dev'));
+app.use(morgan('dev :req[Origin]'));
 app.use(helmet());
-app.use(
-    cors({
-        origin: process.env.CORS_WHITELIST.split(' '),
-    }),
-);
+
+const CORS_WHITELIST = process.env.CORS_WHITELIST.split(' ');
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (CORS_WHITELIST.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('*', cloudinaryConfig);
 
